@@ -5,7 +5,6 @@ type Habit = {
     id: string;
     name: string;
     description: string;
-    createdAt: string;
 }
 
 type HabitState = {
@@ -43,3 +42,4 @@ const habitSlice = createSlice({
 
 export const { addHabits, addHabit, removeHabit} = habitSlice.actions;
 export default habitSlice.reducer;
+export type { Habit, HabitState };
