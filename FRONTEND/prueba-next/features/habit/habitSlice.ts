@@ -2,8 +2,8 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { fetchHabits } from "./habitAPI";
 
 type Habit = {
-    id: string;
-    name: string;
+    _id: string;
+    title: string;
     description: string;
 }
 
@@ -30,7 +30,7 @@ const habitSlice = createSlice({
             state.habits.push(action.payload);
         },
         removeHabit: (state, action) => {
-            state.habits = state.habits.filter(habit => habit.id !== action.payload);
+            state.habits = state.habits.filter(habit => habit._id !== action.payload);
         }
     },
     extraReducers: (builder) => {
