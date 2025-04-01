@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { use } = require("../routes");
 const habitSchema = new mongoose.Schema({
     title:{
         type: String,
@@ -27,6 +28,11 @@ const habitSchema = new mongoose.Schema({
     startedAt:{
         type: Date,
         default: Date.now
+    },
+    userId :{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     },
 });
 

@@ -1,25 +1,55 @@
 var express = require('express');
 var router = express.Router();
 const Habit = require("../models/Habits");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
+
+const autenticateToken = (req, res, next) =>{
+  const token = req.header("Authorization");
+  if(!token) {
+    return res.status(401).json({ error: "No token provided"});
+  }
+
+  try{
+    const tokenWithoutBearer = token.replace("Bearer ", "");
+    const verified = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
+    req.user = verified;
+    next();
+  }catch(err){
+    console.error(err);
+    res.status(403).json({ error: "Invalid token"});
+  }
+};
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get("/habits", async(req, res) =>{
+router.get("/habits", autenticateToken ,async(req, res) =>{
   try{
-    const habits = await Habit.find();
+    if (!req.user || !req.user.id) {
+      return res.status(500).json({ message: "Error retrieving habits" });
+    }
+    let userId = req.user.id;
+
+    const habits = await Habit.find({ "userId": new mongoose.Types.ObjectId(userId) });
+
     res.json(habits);
   }catch(err){
-    res.status(500).json({message: "Error retrieving habits"});
+    res.status(500).json({message: "Error retrieving habits  aaaa"});
   }
 });
 
-router.post("/habits", async(req, res) =>{
+router.post("/habits", autenticateToken, async(req, res) =>{
   try{
     const { title, description } = req.body;
-    const habit = new Habit({ title, description });
+    if (!req.user || !req.user.id) {
+      return res.status(500).json({ message: "Error adding habit"}); 
+    }
+    let userId = req.user.id;
+    userId = new mongoose.Types.ObjectId(userId);
+    const habit = new Habit({ title, description, userId });
     await habit.save();
     res.json(habit); 
   }catch(err){
@@ -27,8 +57,19 @@ router.post("/habits", async(req, res) =>{
   }
 });
 
-router.delete("/habits/:id", async(req, res) =>{
+router.delete("/habits/:id", autenticateToken, async(req, res) =>{
   try{
+    if (!req.user || !req.user.id) {
+      return res.status(500).json({ message: "Error deleting habit"}); 
+    }
+    let userId = req.user.id;
+
+    const habit = await Habit.findById(req.params.id);
+
+    if (habit.userId.toString() !== userId) {
+      return res.status(403).json({ message: "Unauthorized"});
+    }
+
     await Habit.findByIdAndDelete(req.params.id);
     res.json({ message: "Habit deleted"});
   }catch(err){
@@ -36,7 +77,7 @@ router.delete("/habits/:id", async(req, res) =>{
   }
 });
 
-router.patch("/habits/markasdone/:id", async(req, res) =>{
+router.patch("/habits/markasdone/:id", autenticateToken, async(req, res) =>{
   try{
     const habit = await Habit.findById(req.params.id);
     habit.lastDone = new Date();

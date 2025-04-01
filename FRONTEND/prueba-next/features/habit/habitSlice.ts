@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { fetchHabits } from "./habitAPI";
+import { fetchHabits, fetchaddHabits } from "./habitAPI";
 
 type Habit = {
     _id: string;
@@ -10,6 +10,17 @@ type Habit = {
     lastDone: Date;
     days: number;
     startedAt: Date;
+}
+
+type markAsDoneThunkParams = {
+    habitId: string;
+    token: string;
+}
+
+type addHabitThunkParams = {
+    title: string;
+    description: string;
+    token: string;
 }
 
 type HabitState = {
@@ -24,12 +35,21 @@ const initialState: HabitState = {
     error: {},
 }
 
-export const fetchHabitsThunk = createAsyncThunk("habit/fetchHabits",async () =>{
-    return await fetchHabits();
+export const fetchHabitsThunk = createAsyncThunk("habit/fetchHabits",async (token:string,{rejectWithValue}) =>{
+    const response = await fetchHabits(token);
+    const responseJson = await response.json();
+    if(!response.ok){
+        return rejectWithValue("Failed to fetch habits");
+    } else {
+        return responseJson;
+    }
 });
 
-export const markHabitDoneThunk = createAsyncThunk("habit/markasdone", async (habitId: string, {rejectWithValue}) => {
-    const response = await fetch(`http://localhost:3001/habits/markasdone/${habitId}`, { method: "PATCH" });
+export const markHabitDoneThunk = createAsyncThunk("habit/markasdone", async ({habitId,token}:markAsDoneThunkParams, {rejectWithValue}) => {
+    const response = await fetch(`http://localhost:3001/habits/markasdone/${habitId}`, { 
+        method: "PATCH",
+        headers: {Autorization: "Bearer " + token,}
+        });
     const responseJson = await response.json();
     if(!response.ok){
         return rejectWithValue("Failed to mark habit as done");
@@ -39,6 +59,16 @@ export const markHabitDoneThunk = createAsyncThunk("habit/markasdone", async (ha
         return responseJson.message
     }
 });
+
+export const fetchAddHabitThunk = createAsyncThunk("habit/fetchAddHabit", async ({title, description, token}:addHabitThunkParams, {rejectWithValue}) => {
+    const response = await fetchaddHabits(token, title, description);
+    const responseJson = await response.json();
+    if(!response.ok){
+        return rejectWithValue("Failed to add habit");
+    }
+    return responseJson;
+}
+);
 
 const habitSlice = createSlice({
     name: "Habit",
@@ -58,12 +88,15 @@ const habitSlice = createSlice({
         builder.addCase(fetchHabitsThunk.fulfilled, (state, action) => {
             state.habits = action.payload;
         }).addCase(markHabitDoneThunk.fulfilled, (state, action) => { 
-            state.status[action.meta.arg] = "succeeded";
-            state.error[action.meta.arg] = null;
+            state.status[action.meta.arg.habitId] = "succeeded";
+            state.error[action.meta.arg.habitId] = null;
         }).addCase(markHabitDoneThunk.rejected, (state, action) => {
-            state.status[action.meta.arg] = "failed";
-            state.error[action.meta.arg] = action.payload as string;
-        })  
+            state.status[action.meta.arg.habitId] = "failed";
+            state.error[action.meta.arg.habitId] = action.payload as string;
+        }).addCase(markHabitDoneThunk.pending, (state, action) => {
+            state.status[action.meta.arg.habitId] = "loading";
+            state.error[action.meta.arg.habitId] = null;
+        })   
     },
 });
 
