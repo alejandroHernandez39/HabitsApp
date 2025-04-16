@@ -38,9 +38,9 @@ export const fetchLoginUserThunk = createAsyncThunk("user/fetchLoginUser", async
     const response = await fetchLoginUser(username, password);
     const responseJson = await response.json();
     if (!response.ok) {
-        return rejectWithValue("Failed to login user");
+        return rejectWithValue(responseJson.message);
     } else if (responseJson.message.toString() === "User logged in") {
-        return responseJson.message;
+        return responseJson.token;
     } else {
         return rejectWithValue(responseJson.message);
     }
@@ -57,8 +57,8 @@ const userSlice = createSlice({
         builder
             .addCase(fetchRegisterUserThunk.fulfilled, (state, action) => {
                 state.status = "succeeded";
-                state.user = null;
-                state.error = action.payload as string;
+                state.user = action.payload;
+                state.error = null;
                 alert("User registered successfully. Please login."); 
             })
             .addCase(fetchRegisterUserThunk.rejected, (state, action) => {
@@ -69,14 +69,14 @@ const userSlice = createSlice({
             })
             .addCase(fetchLoginUserThunk.fulfilled, (state, action) => {
                 state.status = "succeeded";
-                state.user =  null;
-                state.error = action.payload as string;
+                state.user =  action.payload;
+                state.error = null;
+                alert("User logged in successfully.");
             })
             .addCase(fetchLoginUserThunk.rejected, (state, action) => {
                 state.status = "failed";
                 state.user = null;
                 state.error = action.payload as string;
-                alert("User login failed. Please try again.");
             });
     }
 });

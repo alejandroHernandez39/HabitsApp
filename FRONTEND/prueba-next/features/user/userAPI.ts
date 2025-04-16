@@ -1,28 +1,34 @@
 export const fetchRegisterUser = async (username:string, password:string) => {
-    const response = await fetch("localhost:3001/users/register", {
+    const response = await fetch("http://localhost:3001/users/register", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ 
+            "username":username, 
+            "password":password }),
 });
     if (!response.ok) {
-        throw new Error("Failed to register user");
+        throw new Error("Failed to fetch user data");
     }
-    return response.json();
+    return response;
 }
 
 export const fetchLoginUser = async (username:string, password:string) => {
-    const response = await fetch("localhost:3001/users/login", {
+    const response = await fetch("http://localhost:3001/users/login", {
         method: "POST",
         credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ 
+           "username":username, 
+           "password":password 
+         }),
     });
     if (!response.ok) {
-        throw new Error("Failed to login user");
+        throw new Error("Failed to fetch user data");
     }
-    return response.json();
+    
+    return response;
 }   

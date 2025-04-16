@@ -48,7 +48,7 @@ export const fetchHabitsThunk = createAsyncThunk("habit/fetchHabits",async (toke
 export const markHabitDoneThunk = createAsyncThunk("habit/markasdone", async ({habitId,token}:markAsDoneThunkParams, {rejectWithValue}) => {
     const response = await fetch(`http://localhost:3001/habits/markasdone/${habitId}`, { 
         method: "PATCH",
-        headers: {Autorization: "Bearer " + token,}
+        headers: {Authorization: "Bearer " + token,}
         });
     const responseJson = await response.json();
     if(!response.ok){
@@ -96,7 +96,9 @@ const habitSlice = createSlice({
         }).addCase(markHabitDoneThunk.pending, (state, action) => {
             state.status[action.meta.arg.habitId] = "loading";
             state.error[action.meta.arg.habitId] = null;
-        })   
+        }).addCase(fetchAddHabitThunk.fulfilled, (state, action) => {
+            state.habits.push(action.payload);
+        })
     },
 });
 

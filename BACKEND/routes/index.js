@@ -12,6 +12,7 @@ const autenticateToken = (req, res, next) =>{
 
   try{
     const tokenWithoutBearer = token.replace("Bearer ", "");
+    console.log(token);
     const verified = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
     req.user = verified;
     next();
